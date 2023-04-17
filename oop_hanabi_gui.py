@@ -266,14 +266,23 @@ class gui(tk.Tk, hanabi):
         window.log.pack(side=RIGHT)
 
         # Set up frame for own hand
-        window.own_hand_frame = tk.Frame(window, borderwidth=2, relief="groove")
+        window.own_hand_frame = tk.Frame(window, borderwidth=2, width = 500, height = 150, relief="groove")
         window.own_hand_frame.pack(side=TOP)
+        window.own_hand_frame.pack_propagate(0)
+        window.num_through_my_hand = 1
         window.label = tk.Label(window.own_hand_frame, text = 'Your Own Hand')
         window.label.pack(side=TOP)
+        window.own_hand = []
         for i in range(5):
-            cardnum = str(i+1)
+            cardnum = str(window.num_through_my_hand)
             window.cardlabel = tk.Label(window.own_hand_frame, bg = 'White', relief = "groove", borderwidth = 2, text = 'Card #' + cardnum, width=10, height=5)
             window.cardlabel.pack(side = LEFT)
+            window.num_through_my_hand+=1
+            self.make_draggable(window.cardlabel)
+            window.own_hand.append([i, window.cardlabel, self.Hanabi.players_hands[player_num][i]])
+
+            
+        #self.deal_own_draggable_hand(window, window.player_num, window.own_hand_frame)
 
         ## DISPLAY OTHER PLAYERS HANDS ##
         # Set up frame for the hands
@@ -382,7 +391,7 @@ class gui(tk.Tk, hanabi):
             pwindow.log.insert(tk.INSERT, 'Turn ' + str(self.Hanabi.turn_count+1) + ': \n Player ' + str(player_num) + ' Discarded a ' + colour + ' ' + str(number)+'.\n\n')
             pwindow.log.configure(state='disabled')
         
-        self.redeal_card(place_in_hand, player_num)
+        self.redeal_card(place_in_hand, player_num, window)
 
 
         window.end_turn = tk.Button(window.actionsframe, text='\n End your Turn \n', width=20, command = lambda: self.refresh_display(self.PlayerWindows, player_num))
@@ -578,28 +587,68 @@ class gui(tk.Tk, hanabi):
                     pwindow.log.insert(tk.INSERT, 'Turn ' + str(self.Hanabi.turn_count+1) + ': \n Player ' + str(player_num) + ' Failed to Play a ' + colour + ' ' + str(number)+'.\n\n')
                     pwindow.log.configure(state='disabled')
         
-        self.redeal_card(place_in_hand, player_num)
+        self.redeal_card(place_in_hand, player_num, place_in_hand, window)
 
         window.end_turn = tk.Button(window.actionsframe, text='\n End your Turn \n', width=20, command = lambda: self.refresh_display(self.PlayerWindows, player_num))
         window.end_turn.pack(side=TOP, pady = 10)
 
         return
     
-    def redeal_card(self, card, hand_num):
+    def redeal_card(self, card, hand_num, window):
         # pop(index) method removes a random card from the deck and stores it in dealt_card
         del self.Hanabi.players_hands[hand_num][card]
         dealt_card = self.Hanabi.deck.pop(random.randrange(len(self.Hanabi.deck)))
         self.Hanabi.players_hands[hand_num].append(dealt_card)
+        window.own_hand[card][1].destroy()
+        del window.own_hand[card]
+        cardnum = str(window.num_through_my_hand)
+        window.cardlabel = tk.Label(window.own_hand_frame, bg = 'White', relief = "groove", borderwidth = 2, text = 'Card #' + cardnum, width=10, height=5)
+        window.cardlabel.pack(side = RIGHT)
+        window.num_through_my_hand+=1
+        self.make_draggable(window.cardlabel)
+        window.own_hand.append([4, window.cardlabel, dealt_card])
+
         return
     
     def refresh_display(self, windows_reset, last_player):
+        def x_coord(self, e):
+            return e.winfo_x()
         next_player = (last_player+1) % self.Hanabi.num_players
+
+        # Work out new order of each hand:
+        for window in windows_reset:
+            n = len(window.own_hand)
+            for i in range(n):
+                for j in range(n-1):
+                    if window.own_hand[j][1].winfo_x() > window.own_hand[j+1][1].winfo_x():
+                        window.own_hand[j], window.own_hand[j+1] = window.own_hand[j+1], window.own_hand[j]
+            print
+            self.Hanabi.players_hands[window.player_num]=[]
+        
+            for i in range(n):
+                print ()
+                self.Hanabi.players_hands[window.player_num].append(window.own_hand[i][2])
         self.Hanabi.turn_count+=1
         for window in windows_reset:
                     # Re-size window
             #window.geometry('1500x500')
 
-            # Set up frame for each other hand
+            #if window.own_hand.sort 
+            #for cardnum in range(5):
+            #        colour = str(self.Hanabi.players_hands[handnum][cardnum][0])
+            #        number = str(self.Hanabi.players_hands[handnum][cardnum][1])##
+#
+ #                   if colour == 'Blue' or colour == 'Red' or colour == 'Green':
+  #                      window.cardlabel = tk.Label(players_hand_frame, fg = 'White', bg = colour, relief = "groove", borderwidth = 2, text = colour + ' ' + number, width=10, height=5)
+   #                     window.cardlabel.pack(side = LEFT)
+    #                if colour == 'Yellow' or colour == 'White':
+     #                   window.cardlabel = tk.Label(players_hand_frame, bg = colour, relief = "groove", borderwidth = 2, text = colour + ' ' + number, width=10, height=5)
+      #                  window.cardlabel.pack(side = LEFT)
+       #             if colour == 'Multi':                    
+        #                window.cardlabel = tk.Label(players_hand_frame, relief = "groove", borderwidth = 2, text = colour + ' ' + number, width=10, height=5)
+         #               window.cardlabel.pack(side = LEFT)
+
+            #self.deal_own_draggable_hand(window, window.player_num, window.own_hand_frame)
             for [player_hand_num, players_hand_frame] in window.playershandsframes:
                 # Clear widgets from each hands frames
                 for widget in players_hand_frame.winfo_children():
@@ -675,7 +724,49 @@ class gui(tk.Tk, hanabi):
             window.lives.pack(side=LEFT)
 
         return
-        
+
+    def drag(self, event):
+        event.widget.place(x=event.x_root, y=event.y_root,anchor=CENTER)
+
+    def deal_own_draggable_hand(self, window, handnum, players_hand_frame):
+        for widget in players_hand_frame.winfo_children():
+            widget.destroy()
+        window.own_hand = []
+        for cardnum in range(5):
+            colour = str(self.Hanabi.players_hands[handnum][cardnum][0])
+            number = str(self.Hanabi.players_hands[handnum][cardnum][1])
+
+            if colour == 'Blue' or colour == 'Red' or colour == 'Green':
+                window.cardlabel = tk.Label(players_hand_frame, fg = 'White', bg = colour, relief = "groove", borderwidth = 2, text = colour + ' ' + number, width=10, height=5)
+                window.cardlabel.pack(side = LEFT)
+                self.make_draggable(window.cardlabel)
+                window.own_hand.append(window.cardlabel)
+            if colour == 'Yellow' or colour == 'White':
+                window.cardlabel = tk.Label(players_hand_frame, bg = colour, relief = "groove", borderwidth = 2, text = colour + ' ' + number, width=10, height=5)
+                window.cardlabel.pack(side = LEFT)
+                self.make_draggable(window.cardlabel)
+                window.own_hand.append(window.cardlabel)
+            if colour == 'Multi':                    
+                window.cardlabel = tk.Label(players_hand_frame, relief = "groove", borderwidth = 2, text = colour + ' ' + number, width=10, height=5)
+                window.cardlabel.pack(side = LEFT)
+                self.make_draggable(window.cardlabel)
+                window.own_hand.append(window.cardlabel)
+
+    def make_draggable(self, widget):
+        widget.bind("<Button-1>", self.on_drag_start)
+        widget.bind("<B1-Motion>", self.on_drag_motion)
+
+    def on_drag_start(self, event):
+        widget = event.widget
+        widget._drag_start_x = event.x
+        widget._drag_start_y = event.y
+
+    def on_drag_motion(self, event):
+        widget = event.widget
+        x = widget.winfo_x() - widget._drag_start_x + event.x
+        y = widget.winfo_y() - widget._drag_start_y + event.y
+        widget.place(x=x, y=y)
+
     def opens_player_window(self):           
         self.button = tk.Button(self, text='Click to Start', borderwidth=2, relief="groove")
         self.button['command'] = self.start()
