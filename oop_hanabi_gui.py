@@ -162,6 +162,21 @@ from tkinter import *
 from tkinter import scrolledtext
 from tkinter.ttk import *
 
+
+class PackedLabel(tk.Label):
+    #Subclass of label which automatically packs itself after initialisation.
+    def __init__(self, parent, side=TOP, padx=0, pady=0, **kwargs):
+        self.side = side
+        self.padx = padx
+        self.pady = pady
+        self.parent = parent
+        super().__init__(self.parent, **kwargs)
+
+    def __post_init__(self):
+        self.pack(side=self.side, padx=self.padx, pady=self.pady)
+        super().__post_init__()
+
+
 class gui(tk.Tk, hanabi):
     def __init__(self):
         #super().__init__()
@@ -238,10 +253,10 @@ class gui(tk.Tk, hanabi):
         # Set up frame for own hand
         window.own_hand_frame = tk.Frame(window, borderwidth=2, relief="groove")
         window.own_hand_frame.pack(side=TOP)
-        window.label = self.packed_label(window.own_hand_frame, TOP, text = 'Your Own Hand')
+        window.label = PackedLabel(window.own_hand_frame, TOP, text = 'Your Own Hand')
         for i in range(5):
             cardnum = str(i+1)
-            window.cardlabel = self.packed_label(window.own_hand_frame, LEFT, bg = 'White', relief = "groove", borderwidth = 2, text = 'Card #' + cardnum, width=10, height=5)
+            window.cardlabel = PackedLabel(window.own_hand_frame, LEFT, bg = 'White', relief = "groove", borderwidth = 2, text = 'Card #' + cardnum, width=10, height=5)
 
         ## DISPLAY OTHER PLAYERS HANDS ##
         # Set up frame for the hands
@@ -256,7 +271,7 @@ class gui(tk.Tk, hanabi):
             window.frame = tk.Frame(window.playershandsframe, borderwidth=2, relief="groove")
             window.frame.pack(side=LEFT)
             name = 'Player ' + str(k) + "'s Hand"
-            window.label = self.packed_label(window.frame, TOP, text = name)
+            window.label = PackedLabel(window.frame, TOP, text = name)
             window.playershandsframes.append([k, window.frame])
             k += 1
 
@@ -268,28 +283,28 @@ class gui(tk.Tk, hanabi):
                 colour = str(other_players_hands[handnum][cardnum][0])
                 number = str(other_players_hands[handnum][cardnum][1])
                 if colour == 'Blue' or colour == 'Red' or colour == 'Green':
-                    window.cardlabel = self.packed_label(window.playershandsframes[handnum][1], LEFT, fg = 'White', bg = colour, relief = "groove", borderwidth = 2, text = colour + ' ' + number, width=10, height=5)
+                    window.cardlabel = PackedLabel(window.playershandsframes[handnum][1], LEFT, fg = 'White', bg = colour, relief = "groove", borderwidth = 2, text = colour + ' ' + number, width=10, height=5)
                 if colour == 'Yellow' or colour == 'White':
-                    window.cardlabel = self.packed_label(window.playershandsframes[handnum][1], LEFT, bg = colour, relief = "groove", borderwidth = 2, text = colour + ' ' + number, width=10, height=5)
+                    window.cardlabel = PackedLabel(window.playershandsframes[handnum][1], LEFT, bg = colour, relief = "groove", borderwidth = 2, text = colour + ' ' + number, width=10, height=5)
                 if colour == 'Multi':                    
-                    window.cardlabel = self.packed_label(window.playershandsframes[handnum][1], LEFT, relief = "groove", borderwidth = 2, text = colour + ' ' + number, width=10, height=5)
+                    window.cardlabel = PackedLabel(window.playershandsframes[handnum][1], LEFT, relief = "groove", borderwidth = 2, text = colour + ' ' + number, width=10, height=5)
         
         # Display discard and play piles:
         window.discard_frame = tk.Frame(window, borderwidth=2, relief="groove")
         window.discard_frame.pack(side=TOP, pady=(10, 0))
-        window.discardpileslabel = self.packed_label(window.discard_frame, TOP, text='Discard Piles')
+        window.discardpileslabel = PackedLabel(window.discard_frame, TOP, text='Discard Piles')
         window.discardpileslabels = self.colour_piles(window.discard_frame, 'discard')
 
         window.play_frame = tk.Frame(window, borderwidth=2, relief="groove")
         window.play_frame.pack(side=TOP, pady=(10, 0))
-        window.playpileslabel = self.packed_label(window.play_frame, TOP, text='Play Piles')
+        window.playpileslabel = PackedLabel(window.play_frame, TOP, text='Play Piles')
         window.playpileslabels = self.colour_piles(window.play_frame, 'play')
         
         window.actionsframe = ttk.Frame(window)#, borderwidth=2, relief='groove')
         window.actionsframe.pack(side=TOP, pady=(10, 0))
 
         if window.player_num == 0:
-            window.actionslabel = self.packed_label(window.actionsframe, TOP, text='Choose your Action:')
+            window.actionslabel = PackedLabel(window.actionsframe, TOP, text='Choose your Action:')
             window.playaction = tk.Button(window.actionsframe, text='\n Play a Card \n', width=20, command = lambda: self.guiplay(window, player_num))
             window.playaction.pack(side=LEFT, padx=(5, 0), pady=(0, 5))
             window.discardaction = tk.Button(window.actionsframe, text='\nDiscard a Card\n', width=20, command = lambda: self.guidiscard(window, player_num))
@@ -299,17 +314,16 @@ class gui(tk.Tk, hanabi):
                 #window.infoaction['command'] = self.guigiveinfo(player_num)
                 window.infoaction.pack(side=LEFT, pady=(0, 5))
             else:
-                window.infoaction = self.packed_label(window.actionsframe, LEFT, pady=(0,5), text = "\nNo Pieces of Information Remaining\n You must Play or Discard \n", width=20)
+                window.infoaction = PackedLabel(window.actionsframe, LEFT, pady=(0,5), text = "\nNo Pieces of Information Remaining\n You must Play or Discard \n", width=20)
         else:
-            window.waitmessage = self.packed_label(window.actionsframe, TOP, pady=(0,10), text='\n\n Not your turn - talk to the others! :) \n\n', width =100, relief = 'groove')
+            window.waitmessage = PackedLabel(window.actionsframe, TOP, pady=(0,10), text='\n\n Not your turn - talk to the others! :) \n\n', width =100, relief = 'groove')
 
         # Display Info, lives and deck
-        window.deck_label = self.packed_label(window, BOTTOM, pady=10, text = 'Cards Remaining in Deck: \n \n' + str(len(self.Hanabi.deck)), bg = 'White', relief = "groove", borderwidth = 2, width=30, height=5)
+        window.deck_label = PackedLabel(window, BOTTOM, pady=10, text = f'Cards Remaining in Deck: \n \n{len(self.Hanabi.deck)}', bg = 'White', relief = "groove", borderwidth = 2, width=30, height=5)
         window.infolivesframe = tk.Frame(window, borderwidth=2, relief="groove")
         window.infolivesframe.pack(side=BOTTOM)
-        window.info = self.packed_label(window.infolivesframe, LEFT, padx=30, text = 'Pieces of Information Remaining: ' + str(self.Hanabi.info_num+1) + '\n')
-        window.info.pack(side= LEFT, padx = 30)        
-        window.lives = self.packed_label(window.infolivesframe, LEFT, padx=30, pady=10, text = 'Lives Remaining: ' + str(self.Hanabi.lives_num+1)+ '\n')
+        window.info = PackedLabel(window.infolivesframe, LEFT, padx=30, text = f'Pieces of Information Remaining: {self.Hanabi.info_num+1}\n')      
+        window.lives = PackedLabel(window.infolivesframe, LEFT, padx=30, pady=10, text = f'Lives Remaining: {self.Hanabi.lives_num+1}\n')
 
         # Give space for notes
         window.textbox = tk.scrolledtext.ScrolledText(window, width = 40, height = 5)# text = 'You may add notes here...')
@@ -330,7 +344,7 @@ class gui(tk.Tk, hanabi):
         if self.Hanabi.info_num != 8:
             self.Hanabi.info_num+=1
 
-        window.message = self.packed_label(window.actionsframe, TOP, pady=(0,10), text='\n\n You Discarded a ' + colour + ' ' + str(number) + '... \n\n Press "End your Turn" to Update the Display \n\n', width =100, relief = 'groove')
+        window.message = PackedLabel(window.actionsframe, TOP, pady=(0,10), text='\n\n You Discarded a ' + colour + ' ' + str(number) + '... \n\n Press "End your Turn" to Update the Display \n\n', width =100, relief = 'groove')
         
         # Update log
         for pwindow in self.PlayerWindows:
@@ -359,7 +373,7 @@ class gui(tk.Tk, hanabi):
         
         # Choose player to give info to
         if self.Hanabi.num_players != 1:
-            window.label = self.packed_label(window.actionsframe, TOP, text = 'Please Choose which Player to Give Information to')
+            window.label = PackedLabel(window.actionsframe, TOP, text = 'Please Choose which Player to Give Information to')
             cont = tk.IntVar()
             window.buttonsframe =tk.Frame(window.actionsframe)
             window.buttonsframe.pack(side=TOP)
@@ -390,14 +404,14 @@ class gui(tk.Tk, hanabi):
 
         # Choose which colour or number       
         if colourornumber == 'colour':
-            window.label = self.packed_label(window.actionsframe, TOP, text = 'Please Choose a Colour to Give Information On')
+            window.label = PackedLabel(window.actionsframe, TOP, text = 'Please Choose a Colour to Give Information On')
             window.buttonsframe = tk.Frame(window.actionsframe)
             window.buttonsframe.pack(side=TOP)
             for c in self.pure_colours:
                 window.button = tk.Button(window.buttonsframe, text=f'{c}(s)', command=lambda c=c: self.setvar(c, cont), width = 15)
                 window.button.pack(side=LEFT)
         else:
-            window.label = self.packed_label(window.actionsframe, TOP, text = 'Please Choose a Number to Give Information On')
+            window.label = self.PackedLabel(window.actionsframe, TOP, text = 'Please Choose a Number to Give Information On')
             window.buttonsframe = tk.Frame(window.actionsframe)
             window.buttonsframe.pack(side=TOP)
             for i, spelled_num in enumerate(self.spelled_numbers):
@@ -416,7 +430,7 @@ class gui(tk.Tk, hanabi):
         for pwindow in self.PlayerWindows:
             for widget in pwindow.actionsframe.winfo_children():
                 widget.destroy()
-            pwindow.label = self.packed_label(pwindow.actionsframe, TOP, text = message)
+            pwindow.label = PackedLabel(pwindow.actionsframe, TOP, text = message)
 
             # Update log whilst we're here        
             pwindow.log.configure(state='normal')
@@ -430,7 +444,7 @@ class gui(tk.Tk, hanabi):
         self.Hanabi.info_num+=-1
 
         # Warn the player not to end turn until the info has been seen
-        window.message = self.packed_label(window.actionsframe, TOP, pady=(0,10), text='\n\n Information Given! \n\n Players must Look at their Table Before you End your Turn... \n\n Then Press "End your Turn" to Update the Display \n\n', width =100, relief = 'groove')
+        window.message = PackedLabel(window.actionsframe, TOP, pady=(0,10), text='\n\n Information Given! \n\n Players must Look at their Table Before you End your Turn... \n\n Then Press "End your Turn" to Update the Display \n\n', width =100, relief = 'groove')
         
         # End turn button
         window.end_turn = tk.Button(window.actionsframe, text='\n End your Turn \n', width=20, command = lambda: self.refresh_display(self.PlayerWindows, player_num))
@@ -467,6 +481,11 @@ class gui(tk.Tk, hanabi):
         window.button.destroy()
 
         return colour, number, chosen_number
+
+    def print_to_log(log, text):
+        log.configure(state='normal')
+        log.insert(tk.INSERT, text)
+        log.configure(state='disabled')
         
     def guiplay(self, window, player_num):
         # Remove the action buttons
@@ -481,27 +500,23 @@ class gui(tk.Tk, hanabi):
             if all(value == 5 for value in self.Hanabi.played_decks.values()):
                 self.guiwin()
             else:
-                window.message = self.packed_label(window.actionsframe, TOP, pady=(0,10), text=f'\n\n A {colour} {number} successfully played! :) \n\n Press "End your turn" to update the display \n\n', width =100, relief = 'groove')
+                window.message = PackedLabel(window.actionsframe, TOP, pady=(0,10), text=f'\n\n A {colour} {number} successfully played! :) \n\n Press "End your turn" to update the display \n\n', width =100, relief = 'groove')
                 if number == 5:
                     self.Hanabi.info_num+=1
                 # Update log
                 for pwindow in self.PlayerWindows:
-                    pwindow.log.configure(state='normal')
-                    pwindow.log.insert(tk.INSERT, f'Turn {self.Hanabi.turn_count+1}: \n Player {player_num} successfully played a {colour} {number}.\n\n')
-                    pwindow.log.configure(state='disabled')
+                    self.print_to_log(pwindow.log, f'Turn {self.Hanabi.turn_count+1}: \n Player {player_num+1} successfully played a {colour} {number}.\n\n')
 
         else:         
             self.Hanabi.lives_num+=-1
             if self.Hanabi.lives_num == 0:
                 self.guilose()
             else:
-                window.message = self.packed_label(window.actionsframe, TOP, pady=(0,10), text=f'\n\n Failed to Play a {colour} {str(number)}... :( \n\n Press "End your turn" to update the display \n\n', width =100, relief = 'groove')
+                window.message = PackedLabel(window.actionsframe, TOP, pady=(0,10), text=f'\n\n Failed to Play a {colour} {number}... :( \n\n Press "End your turn" to update the display \n\n', width =100, relief = 'groove')
                 self.Hanabi.discard_decks[colour].append(number)
                 # Update log
                 for pwindow in self.PlayerWindows:
-                    pwindow.log.configure(state='normal')
-                    pwindow.log.insert(tk.INSERT, f'Turn {self.Hanabi.turn_count+1}: \n Player {player_num} failed to play a {colour}  {number}.\n\n')
-                    pwindow.log.configure(state='disabled')
+                    self.print_to_log(pwindow.log, f'Turn {self.Hanabi.turn_count+1}: \n Player {player_num+1} failed to play a {colour} {number}.\n\n')
         
         self.redeal_card(place_in_hand, player_num)
 
@@ -532,7 +547,7 @@ class gui(tk.Tk, hanabi):
                 
                 # Name this frame
                 name = f"Player {player_hand_num}'s Hand"
-                window.label = self.packed_label(players_hand_frame, TOP, text = name)
+                window.label = PackedLabel(players_hand_frame, TOP, text = name)
                 
                 # Re-deal the hands
                 handnum = player_hand_num-1
@@ -541,16 +556,16 @@ class gui(tk.Tk, hanabi):
                     number = str(self.Hanabi.players_hands[handnum][cardnum][1])
 
                     if colour == 'Blue' or colour == 'Red' or colour == 'Green':
-                        window.cardlabel = self.packed_label(players_hand_frame, LEFT, fg = 'White', bg = colour, relief = "groove", borderwidth = 2, text = colour + ' ' + number, width=10, height=5)
+                        window.cardlabel = PackedLabel(players_hand_frame, LEFT, fg = 'White', bg = colour, relief = "groove", borderwidth = 2, text = colour + ' ' + number, width=10, height=5)
                     if colour == 'Yellow' or colour == 'White':
-                        window.cardlabel = self.packed_label(players_hand_frame, LEFT, bg = colour, relief = "groove", borderwidth = 2, text = colour + ' ' + number, width=10, height=5)
+                        window.cardlabel = PackedLabel(players_hand_frame, LEFT, bg = colour, relief = "groove", borderwidth = 2, text = colour + ' ' + number, width=10, height=5)
                     if colour == 'Multi':                    
-                        window.cardlabel = self.packed_label(players_hand_frame, LEFT, relief = "groove", borderwidth = 2, text = colour + ' ' + number, width=10, height=5)
+                        window.cardlabel = PackedLabel(players_hand_frame, LEFT, relief = "groove", borderwidth = 2, text = colour + ' ' + number, width=10, height=5)
             
             ## Update discard and play piles ##
             for widget in window.discard_frame.winfo_children():
                 widget.destroy()
-            window.discardpileslabel = self.packed_label(window.discard_frame, TOP, text='Discard Piles')
+            window.discardpileslabel = PackedLabel(window.discard_frame, TOP, text='Discard Piles')
             window.discardpileslabels = self.colour_piles(window.discard_frame, 'discard')
 
             for widget in window.play_frame.winfo_children():
@@ -584,11 +599,11 @@ class gui(tk.Tk, hanabi):
 
             # Display info, lives and deck
             window.deck_label.destroy()
-            window.deck_label = self.packed_label(window, BOTTOM, pady=10, text = f'Cards Remaining in Deck: \n \n {str(len(self.Hanabi.deck))}', bg = 'White', relief = "groove", borderwidth = 2, width=30, height=5)
+            window.deck_label = PackedLabel(window, BOTTOM, pady=10, text = f'Cards Remaining in Deck: \n \n {str(len(self.Hanabi.deck))}', bg = 'White', relief = "groove", borderwidth = 2, width=30, height=5)
             window.info.destroy()
-            window.info = self.packed_label(window.infolivesframe, BOTTOM, text = f'Pieces of Information Remaining: {self.Hanabi.info_num+1}')
+            window.info = PackedLabel(window.infolivesframe, BOTTOM, text = f'Pieces of Information Remaining: {self.Hanabi.info_num+1}')
             window.lives.destroy()      
-            window.lives = self.packed_label(window.infolivesframe, LEFT, text = f'Lives Remaining: {self.Hanabi.lives_num+1}')
+            window.lives = PackedLabel(window.infolivesframe, LEFT, text = f'Lives Remaining: {self.Hanabi.lives_num+1}')
 
         return
         
@@ -603,16 +618,12 @@ class gui(tk.Tk, hanabi):
         #self.destroy()
         return
 
-    def packed_label(self, frame, side, padx=0, pady=0, **kwargs):
+   # def packed_label(self, parent, side, padx=0, pady=0, **kwargs):
         #Wrapping function for creation of Label object that includes packing built in
         #Should turn this into a child class of Tk.Label at some point
-        label = tk.Label(frame, **kwargs)
-        label.pack(side=side, padx=padx, pady=pady)
-        return label         
-
-
-#class PackedLabel(tk.Label):
-#    def __init__(se)
+    #    label = tk.Label(parent, **kwargs)
+     #   label.pack(side=side, padx=padx, pady=pady)
+      #  return label         
 
 
 #hanabi()
